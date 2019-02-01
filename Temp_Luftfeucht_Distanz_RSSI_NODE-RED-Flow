@@ -1,0 +1,234 @@
+[
+    {
+        "id": "231dc9ce.f9e2c6",
+        "type": "tab",
+        "label": "Flow 2",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "6b8b3205.74808c",
+        "type": "serial in",
+        "z": "231dc9ce.f9e2c6",
+        "name": "ESP32",
+        "serial": "a84ec56b.fdff88",
+        "x": 93.5,
+        "y": 78,
+        "wires": [
+            [
+                "e106ecbe.9c33c"
+            ]
+        ]
+    },
+    {
+        "id": "9906988.e7fba68",
+        "type": "debug",
+        "z": "231dc9ce.f9e2c6",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 529.5,
+        "y": 74,
+        "wires": []
+    },
+    {
+        "id": "568a9701.773218",
+        "type": "function",
+        "z": "231dc9ce.f9e2c6",
+        "name": "Sensor Data",
+        "func": "context.data = context.data || {};\n\nswitch(msg.parts.index) {\n    case 0:\n        context.data.Data1 = parseFloat(msg.payload);\n        msg = null;\n        break;\n    case 1:\n        context.data.Data2 = parseFloat(msg.payload);\n        msg = null;\n        break;\n    case 2:\n        context.data.Data3 = parseFloat(msg.payload);\n        msg = null;\n        break;\n    case 3:\n        context.data.Data4 = parseFloat(msg.payload);\n        msg = null;\n        break;\n}\n\nisValid =   context.data.Data1 &&\n            context.data.Data2 &&\n            context.data.Data3 &&\n            context.data.Data4;\n\nif(isValid) {\n    var time = Date();\n    context.data.Time = time.toString();\n    newMsg = { payload : context.data, topic: 'Test Data'};\n    context.data = null;\n    return newMsg;\n}\nelse\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 259.5,
+        "y": 172,
+        "wires": [
+            [
+                "9906988.e7fba68",
+                "624225b8.d2ef3c"
+            ]
+        ]
+    },
+    {
+        "id": "e106ecbe.9c33c",
+        "type": "split",
+        "z": "231dc9ce.f9e2c6",
+        "name": "Split Data",
+        "splt": "/",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "x": 252.5,
+        "y": 79,
+        "wires": [
+            [
+                "568a9701.773218"
+            ]
+        ]
+    },
+    {
+        "id": "624225b8.d2ef3c",
+        "type": "function",
+        "z": "231dc9ce.f9e2c6",
+        "name": "Split Data",
+        "func": "var D1 ={payload: msg.payload.Data1};\nvar D2 ={payload: msg.payload.Data2};\nvar D3 ={payload: msg.payload.Data3};\nvar D4 ={payload: msg.payload.Data4};\n\nreturn[D1,D2,D3,D4];",
+        "outputs": 4,
+        "noerr": 0,
+        "x": 509.5,
+        "y": 175,
+        "wires": [
+            [
+                "b58e7290.8429f"
+            ],
+            [
+                "1f59df22.bfa6b1"
+            ],
+            [
+                "6e15ae88.e1542"
+            ],
+            [
+                "7f738782.bc53d8"
+            ]
+        ]
+    },
+    {
+        "id": "1f59df22.bfa6b1",
+        "type": "ui_gauge",
+        "z": "231dc9ce.f9e2c6",
+        "name": "Temp",
+        "group": "60793df2.169084",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Temperatur(°C)",
+        "label": "°C",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "50",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "22",
+        "seg2": "30",
+        "x": 758.5,
+        "y": 135.4499969482422,
+        "wires": []
+    },
+    {
+        "id": "6e15ae88.e1542",
+        "type": "ui_gauge",
+        "z": "231dc9ce.f9e2c6",
+        "name": "Luftfeucht",
+        "group": "60793df2.169084",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Luftfeuchtigkeit",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 768.5,
+        "y": 177.4499969482422,
+        "wires": []
+    },
+    {
+        "id": "b58e7290.8429f",
+        "type": "ui_gauge",
+        "z": "231dc9ce.f9e2c6",
+        "name": "",
+        "group": "60793df2.169084",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Distanz",
+        "label": "cm",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "300",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 772.5,
+        "y": 99.44999694824219,
+        "wires": []
+    },
+    {
+        "id": "7f738782.bc53d8",
+        "type": "ui_gauge",
+        "z": "231dc9ce.f9e2c6",
+        "name": "",
+        "group": "60793df2.169084",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "RSSI",
+        "label": "dBm",
+        "format": "{{value}}",
+        "min": "-150",
+        "max": 10,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 762.5,
+        "y": 214.44998168945312,
+        "wires": []
+    },
+    {
+        "id": "a84ec56b.fdff88",
+        "type": "serial-port",
+        "z": "",
+        "serialport": "/dev/ttyUSB0",
+        "serialbaud": "9600",
+        "databits": "8",
+        "parity": "none",
+        "stopbits": "1",
+        "newline": "\\n",
+        "bin": "false",
+        "out": "char",
+        "addchar": false,
+        "responsetimeout": "10000"
+    },
+    {
+        "id": "60793df2.169084",
+        "type": "ui_group",
+        "z": "",
+        "name": "Projekt BSE",
+        "tab": "b2c0d9f3.c82518",
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "b2c0d9f3.c82518",
+        "type": "ui_tab",
+        "z": "",
+        "name": "LORA",
+        "icon": "dashboard"
+    }
+]
