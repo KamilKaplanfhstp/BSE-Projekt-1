@@ -1,0 +1,178 @@
+ // Depends on the following Arduino libraries:
+// - Adafruit Unified Sensor Library: https://github.com/adafruit/Adafruit_Sensor
+// - DHT Sensor Library: https://github.com/adafruit/DHT-sensor-library
+
+//#include <Adafruit_Sensor.h>
+//#include <DHT_U.h>
+
+// trigPin = 4
+// echoPin = 15
+// DHTPin 2
+
+#include <DHT.h>
+
+//Lora
+#include <SPI.h>
+#include <LoRa.h>
+
+
+#define DHTPin            2         // Pin which is connected to the DHT sensor.
+#define DHTTYPE           DHT11     // DHT 11 
+//  const int DHTPin = 2;
+
+// Pin definetion of WIFI LoRa 32
+// HelTec AutoMation 2017 support@heltec.cn 
+#define SCK     5    // GPIO5  -- SX127x's SCK
+#define MISO    19   // GPIO19 -- SX127x's MISO
+#define MOSI    27   // GPIO27 -- SX127x's MOSI
+#define SS      18   // GPIO18 -- SX127x's CS
+#define RST     14   // GPIO14 -- SX127x's RESET
+#define DI0     26   // GPIO26 -- SX127x's IRQ(Interrupt Request)
+
+#define BAND    433E6  //you can set band here directly,e.g. 868E6,915E6
+#define PABOOST true
+
+  DHT dht(DHTPin, DHTTYPE);
+
+// DHT_Unified dht(DHTPIN, DHTTYPE);
+
+uint32_t delayMS;
+
+// defines pins numbers
+const int trigPin = 4;
+const int echoPin = 15;
+// defines variables
+long duration, cm;
+
+int counter = 0;
+
+//float tempC;
+float tempF;
+float humi;
+
+void setup() {
+  Serial.begin(9600); 
+  
+  dht.begin(); 
+  Serial.println("DHT11");
+/*  sensor_t sensor;
+  dht.temperature().getSensor(&sensor);
+  dht.humidity().getSensor(&sensor);
+ 
+  delayMS = sensor.min_delay / 1000;
+ */
+   
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+
+  pinMode(25,OUTPUT);
+  while (!Serial);
+//  Serial.println("LoRa Sender");
+
+  SPI.begin(SCK,MISO,MOSI,SS);
+  LoRa.setPins(SS,RST,DI0);
+  if (!LoRa.begin(BAND,PABOOST)) {
+  //  Serial.println("Lora starten Fehlgeschlagen!");
+    while (1);
+  }
+  
+}
+
+void loop() {
+
+//  Serial.print(counter);
+//  Serial.println(".Messung:");
+
+// delay(delayMS);
+// Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+  humi = dht.readHumidity();
+// Read temperature as Celsius (the default)
+  tempF = dht.readTemperature();
+//Read temperature as Fahrenheit (isFahrenheit = true)
+// tempC = dht.readTemperature();
+
+ 
+/*  sensors_event_t event;  
+  dht.temperature().getEvent(&event);
+  if (isnan(event.temperature)) {
+    Serial.println("Fehler beim einlesen der Temperatur!");
+  }
+  else {
+    Serial.print("Temperatur: ");
+    Serial.print(event.temperature);
+    Serial.println(" *C");
+  }
+  // Get humidity event and print its value.
+  dht.humidity().getEvent(&event);
+  if (isnan(event.relative_humidity)) {
+    Serial.println("Fehler beim einlesen der Luftfeuchtigkeit!");
+  }
+  else {
+    Serial.print("Luftfeuchtigkeit: ");
+    Serial.print(event.relative_humidity);
+    Serial.println("%");
+  }
+*/
+
+  // The sensor is triggered by a HIGH pulse of 10 or more microseconds.
+  // Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(5);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+ 
+  // Read the signal from the sensor: a HIGH pulse whose
+  // duration is the time (in microseconds) from the sending
+  // of the ping to the reception of its echo off of an object.
+  pinMode(echoPin, INPUT);
+  duration = pulseIn(echoPin, HIGH);
+
+//  Serial.print("Sendet Paket: ");
+//  Serial.println(counter);
+//  counter++;
+ 
+  // Convert the time into a distance
+  cm = (duration/2) / 29.1;     // Divide by 29.1 or multiply by 0.0343
+//  Serial.print("Distanz:");
+  Serial.print(cm);
+//  Serial.print("cm");
+//  Serial.println();
+
+  Serial.print("/");
+//  Serial.print("Temperatur: ");
+  Serial.print(tempF);
+//  Serial.println("°C");
+//  Serial.print("Luftfeuchtigkeit: ");
+  Serial.print("/");
+  
+  Serial.print(humi);
+//  Serial.println("%");  
+  Serial.println();
+
+
+  // send packet
+  LoRa.beginPacket();
+ // LoRa.println(counter);
+  //LoRa.print("Distanz:");
+  LoRa.print(cm);
+  //LoRa.println("cm");
+  LoRa.print("/");
+  //LoRa.print("Temperatur: ");
+  LoRa.print(tempF);
+  //LoRa.println("°C");
+  //LoRa.print("Luftfeuchtigkeit: ");
+  LoRa.print("/");
+  LoRa.print(humi);
+
+  //LoRa.println("%");  
+  LoRa.endPacket();
+  
+  delay(1000);
+ 
+  digitalWrite(25, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(100);                       // wait for a second
+  digitalWrite(25, LOW);    // turn the LED off by making the voltage LOW
+  delay(100);                       // wait for a second
+}
